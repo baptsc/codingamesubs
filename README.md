@@ -8,3 +8,7 @@ The solutions I push to this repository are passing all tests cases on codingame
 I use only C++ to solve challenges.
 
 Note : since we must submit code in a single file on Codingame, the whole solution to a problem is contained in a main.cpp in this repository. Sometimes when multiple classes are necessary to solve a challenge, it can make the file difficult to read, I do apologize for that.
+
+Some of the most complex challenges I solved so far :
+- "Skynet Revolution - Episode 02" (Graphs theory, BFS algorithm)
+- "The Last Crusade - Episode 02" (Recursion, Path finding, Priority optimization)
