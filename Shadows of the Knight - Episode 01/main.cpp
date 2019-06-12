@@ -35,6 +35,14 @@ public :
 class BatmanControl
 {
 public :
+	/**
+		Batman Control constructor.
+		
+		@param[in] grid_width Game grid width.
+		@param[in] grid_height Game grid height.
+		@param[in] x0 Batman intial x position.
+		@param[in] y0 Batman intial y position.
+	**/
     BatmanControl(int grid_width, int grid_height, int x0, int y0) : m_position(x0, y0), 
                                                                     m_min_x_pos(0),
                                                                     m_min_y_pos(0),

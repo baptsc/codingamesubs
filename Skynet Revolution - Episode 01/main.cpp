@@ -23,12 +23,16 @@ class Node
         /**
          * Node constructor.
          * 
-         * @param[in] Node number.
+         * @param[in] value Node number.
          */
         Node(int value) : m_value(value), m_is_exit(false), m_children() {}
         Node() = delete;
         
-        
+        /**
+            Node destructor. Nothing special because children pointers will be destructed by Network. 
+        **/
+        virtual ~Node() = default;
+
         /**
          * Adds a direct children to the node (if it doesn't exist yet, otherwise it does nothing).
          * 
@@ -225,7 +229,7 @@ class Network
         /**
          * Network destructor.
          */
-        ~Network()
+        virtual ~Network()
         {
             for(auto p : m_nodes)
             {

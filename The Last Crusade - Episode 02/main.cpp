@@ -90,6 +90,7 @@ class Tile;
 
 /**
  * This class describes a path node, consisting of a tile and a direction to enter it.
+ * It's ok to let the fields public here to simplify access, since the only purpose of this class is to store them.
  */
 class PathNode
 {
@@ -109,7 +110,6 @@ class PathNode
 class Tile
 {
     public:
-        class TileEntering;
         
         // ----------------------------- Constructors -----------------------------
         Tile() : m_position(), m_type(TileType::TYPE0), m_paths(), m_neighborhood(), m_is_locked(false), m_contains_player(false)
@@ -136,40 +136,61 @@ class Tile
             resetTile();
         }
 
-        ~Tile() = default;
         Tile(const Tile &tile) = default;
         // -----------------------------------------------------------------------
 
-        void setPosition(int x, int y)
-        {
-            m_position = Vector2i(x,y);
-        }
+        /** 
+            Tile destructor. Nothing special, neighborhood will be destrcuted with map.
+        */
+        virtual ~Tile() = default;
 
+        /**
+            Locks the tile to that it can't rotate anymore.
+        **/
         void lock()
         {
             m_is_locked = true;
         }
 
+        /**
+            Unlocks the tile to that it can rotate again.
+        **/
         void unlock()
         {
             m_is_locked = false;
         }
 
+        /**
+            @returns TRUE if the tile is locked, FALSE otherwise.
+        **/
         bool isLocked() const
         {
             return m_is_locked;
         }
         
+        /**
+            @returns TRUE if the tile currently contains the player, FALSE otherwise.
+        **/
         bool containsPlayer() const
         {
             return m_contains_player;
         }
         
-        bool setContainsPlayer(bool value)
+        /**
+            Sets if the tile contains the player or not.
+
+            @param[in] value TRUE for the tile to contain the player, FALSE otherwise.
+        **/
+        void setContainsPlayer(bool value)
         {
             m_contains_player = value;
         }
         
+        /**
+            Tells whether the tile is invariant regarding its paths by 2 quarter rotation (i.e 180 degrees rotation).
+
+            @returns TRUE is the tile is invariant by 2 quarters, FALSE otherwise. 
+        **/
         bool isInvariantBy2Quarters()
         {
             switch (m_type)
@@ -207,6 +228,11 @@ class Tile
             }
         }
         
+        /**
+            Tells whether the tile is invariant regarding its paths whatever we come from the left or the right.
+
+            @returns TRUE is the tile is invariant by left to right, FALSE otherwise. 
+        **/
         bool isInvariantByLeftToRight()
         {
             switch (m_type)
@@ -244,6 +270,9 @@ class Tile
             }
         }
         
+        /**
+            Resets the tile to its initial rotation, with its original paths.
+        **/
         void resetTile()
         {
             m_paths.clear();
@@ -308,7 +337,10 @@ class Tile
             }
         }
         
-        
+        /**
+            Rotates the tile 2 quarters (i.e 180 degrees).
+            This updates tile paths in function of the rotation result.
+        **/
         void rotate2Quarters()
         {
             if (m_is_locked)
@@ -378,6 +410,10 @@ class Tile
             }
         }
 
+        /**
+            Rotates the tile a quarter left (i.e 90 degrees anticlockwise).
+            This updates tile paths in function of the rotation result.
+        **/
         void rotateAQuarterLeft()
         {
             if (m_is_locked)
@@ -448,6 +484,10 @@ class Tile
             }
         }
 
+         /**
+            Rotates the tile a quarter right (i.e 90 degrees clockwise).
+            This updates tile paths in function of the rotation result.
+        **/
         void rotateAQuarterRight()
         {
             if (m_is_locked)
@@ -518,6 +558,70 @@ class Tile
             }
         }
 
+        /**
+            @returns The tile at the top of the current one (can be nullptr).
+        **/
+        Tile* getTileTop()
+        {
+            return m_neighborhood[Direction::TOP];
+        }
+
+        /**
+            @returns The tile at the right of the current one (can be nullptr).
+        **/
+        Tile* getTileRight()
+        {
+            return m_neighborhood[Direction::RIGHT];
+        }
+
+        /**
+            @returns The tile at the bottom of the current one (can be nullptr).
+        **/
+        Tile* getTileBottom()
+        {
+            return m_neighborhood[Direction::BOTTOM];
+        }
+
+        /**
+            @returns The tile at the left of the current one (can be nullptr).
+        **/
+        Tile* getTileLeft()
+        {
+            return m_neighborhood[Direction::LEFT];
+        }
+
+
+
+        /**
+            Sets the postion of the tile on the map.
+
+            @param[in] x Row position on the map.
+            @param[in] y Column position on the map.
+        **/
+        void setPosition(int x, int y)
+        {
+            m_position = Vector2i(x,y);
+        }
+
+        /**
+            Sets the postion of the tile on the map.
+
+            @param[in] position New position on the map.
+        **/
+        void setPosition(const Vector2i &position)
+        {
+            m_position = position;
+        }
+
+        /**
+            Sets all surrounding tiles for the current one.
+            Pointers can be nullptr.
+
+            @param[in] top_tile Tile at (x,y-1).
+            @param[in] right_tile Tile at (x+1,y).
+            @param[in] bottom_tile Tile at (x,y+1).
+            @param[in] left_tile Tile at (x-1,y).
+        **/
         void setNeighborhood(Tile* top_tile, Tile* right_tile, Tile* bottom_tile, Tile *left_tile)
         {
             m_neighborhood[Direction::TOP] = top_tile;
@@ -526,61 +630,84 @@ class Tile
             m_neighborhood[Direction::LEFT] = left_tile;
         }
 
+        /**
+            Sets tile at the top.
+
+            @param[in] top_tile New tile at the top (can be nullptr).
+        **/
         void setTileTop(Tile* top_tile)
         {
             m_neighborhood[Direction::TOP] = top_tile;
         }
 
+
+        /**
+            Sets tile at the right.
+
+            @param[in] right_tile New tile at the right (can be nullptr).
+        **/
         void setTileRight(Tile* right_tile)
         {
             m_neighborhood[Direction::RIGHT] = right_tile;
         }
 
+
+        /**
+            Sets tile at the bottom.
+
+            @param[in] bottom_tile New tile at the bottom (can be nullptr).
+        **/
         void setTileBottom(Tile* bottom_tile)
         {
             m_neighborhood[Direction::BOTTOM] = bottom_tile;
         }
 
+
+        /**
+            Sets tile at the left.
+
+            @param[in] left_tile New tile at the left (can be nullptr).
+        **/
         void setTileLeft(Tile* left_tile)
         {
             m_neighborhood[Direction::LEFT] = left_tile;
         }
 
-        Tile* getTileTop()
-        {
-            return m_neighborhood[Direction::TOP];
-        }
 
-        Tile* getTileRight()
-        {
-            return m_neighborhood[Direction::RIGHT];
-        }
+        /**
+            Adds a path to the current tile for the player.
 
-        Tile* getTileBottom()
-        {
-            return m_neighborhood[Direction::BOTTOM];
-        }
-
-        Tile* getTileLeft()
-        {
-            return m_neighborhood[Direction::LEFT];
-        }
-
+            @param[in] input Input of the path.
+            @param[in] output Output of the path.
+        **/
         void addPath(const Direction input, const Direction output)
         {
             m_paths[input] = output;
         }
 
+        /**
+            @returns Current position of the tile.
+        */
         Vector2i getPosition() const
         {
             return m_position;
         }
 
+        /**
+            @returns Type of the current tile.
+        */
         TileType getType() const
         {
             return this->m_type;
         }
 
+        /**
+            Tells whether the tile can allow a direction as an input.
+
+            @param[in] direction Direction to test.
+
+            @returns TRUE if the tile can allow the direction as an input, FALSE otherwise.
+        */
         bool hasInputOnDirection(const Direction &direction)
         {
             return m_paths.find(direction) != m_paths.end();
@@ -589,9 +716,9 @@ class Tile
         /**
          * Gives the output informations for an input on the current Tile.
          *
-         * @param Direction input The direction from which the character enters the Tile.
+         * @param[in] input The direction from which the character enters the Tile.
          *
-         * @return PathNode The next path node.
+         * @returns The next path node.
          */
         PathNode getOutput(Direction input)
         {
@@ -611,10 +738,11 @@ class Tile
             return result;
         }
 
-        
-        
 
     private:
+        /**
+            Inits tile neighbourhood to nullptr.
+        **/
         void initNeighborhood()
         {
             m_neighborhood[Direction::TOP] = nullptr;
@@ -623,6 +751,14 @@ class Tile
             m_neighborhood[Direction::LEFT] = nullptr;
         }
        
+
+        /**
+            Gives the inverse of a direction.
+
+            @param[in] d Direction to reverse.
+
+            @returns The inverse direction.
+        **/
         static Direction getReversedEntryDirection(Direction d)
         {
             switch(d)
@@ -643,7 +779,7 @@ class Tile
         bool m_is_locked;
         bool m_contains_player;
         map<Direction,Direction> m_paths; // Keys : input, Values : Output
-        map<Direction, Tile*> m_neighborhood;
+        map<Direction, Tile*> m_neighborhood; // tiles around
 };
 
 
@@ -653,15 +789,24 @@ class Tile
 class Map
 {
     public:
+        /**
+            Map constructor.
+        **/
         Map() : m_size(0,0), m_mapping() {}
-        ~Map() = default;
+
+        /**
+            Map destructor. Nothing special because tiles will auto destruct there (they are not pointers).
+        **/
+        virtual ~Map() = default;
+
 
         /**
          * Adds a Tile to the map
          *
-         * @param int x Position in the tiles line.
-         * @param int y Position in the tiles column.
-         * @param TileType tile_type Type of the Tile.
+         * @param[in] x Position in the tiles line.
+         * @param[in] y Position in the tiles column.
+         * @param[in] tile_type Type of the Tile.
+         * @param[in] lockTile TRUE to lock the new tile, FALSE otherwise.
          */
         void addTile(int x, int y, TileType tile_type, bool lockTile = false)
         {
@@ -685,11 +830,11 @@ class Map
         /**
          * Returns next player position for a player falling through the map.
          *
-         * @param int x Current player position on tiles line.
-         * @param int y Current player position on tiles column.
-         * @param Direction input Direction by which the player is coming in the current tile.
+         * @param[in] x Current player position on tiles line.
+         * @param[in] y Current player position on tiles column.
+         * @param[in] input Direction by which the player is coming in the current tile.
          *
-         * @return Vector2i Position of the next tile the player will ends up in.
+         * @returns Position of the next tile the player will ends up in.
          */
         Vector2i getNextPlayerPosition(int x, int y, Direction input)
         {
@@ -705,6 +850,14 @@ class Map
             }
         }
 
+        /**
+            Accessor to map tiles.
+
+            @param[in] x Map x position.
+            @param[in] y Map y position.
+
+            @returns The tile that corresponds to the requested position, or NULLPTR if the requested tile doesn't exist.
+        **/
         Tile* getTileAt(int x, int y)
         {
             Vector2i position(x,y);
@@ -725,7 +878,7 @@ class Map
          * Updates the neighborhood of a new tile and all the tiles touching it currently, so that the grid remains
          * consistent in the mapping.
          *
-         * @param Tile* The new tile that has just been added to the Map.
+         * @param[inout] tile The new tile that has just been added to the Map.
          */
         void updateTileNeighborhood(Tile *tile)
         {
@@ -793,6 +946,7 @@ class Map
 
 /**
  * This class describes an instruction to output in the terminal.
+ * It's ok to let the fields public here to simplify access, since the only purpose of this class is to store them.
  */
 class SolverInstruction
 {
@@ -812,8 +966,19 @@ class SolverInstruction
 class PathSolver
 {
     public:
+
+        /**
+            Path solver constructor.
+
+            @param[in] map The map to solve on.
+        **/
         explicit PathSolver(Map* map) : m_map(map) {};
-        ~PathSolver() = default;
+        PathSolver() = delete;
+
+        /**
+            Path solver destructor. The map is not destructed by this class. 
+        **/
+        virtual ~PathSolver() = default;
 
         /**
          * This method resolves player path.
@@ -1062,10 +1227,23 @@ class PathSolver
 class RockManager
 {
     public : 
+
+        /**
+            Rock manager constructor.
+
+            @param[in] map Map to work on with rocks.
+            @param[in] player_path Path the player will follow, to compute intersections with rocks.
+        **/
         RockManager(Map* map, std::unordered_map<Vector2i,PathNode>* player_path) : m_player_path(player_path), m_map(map), m_rocks_safety(), m_rocks_blocking_instructions(), m_rocks_current_node(), m_rocks_priorities()
-        {
-            
-        }
+        {}
+
+
+        RockManager() = delete;
+
+        /**
+            Rock manager destructor. Nothing special, pointers referenced in this class must not be destroyed by it.
+        **/
+        virtual ~RockManager() = default; 
         
         /**
          * This method makes the known rocks progress one tile ahead (which keeps the model up to date at each iteration).
@@ -1100,7 +1278,7 @@ class RockManager
         }
         
         /**
-         * This method registers a rock if it doesn't already exists.exists
+         * This method registers a rock if it doesn't already exists.
          * 
          * @param[in] rock_pos_x Rock X coordinate.
          * @param[in] rock_pos_y Rock Y coordinate.

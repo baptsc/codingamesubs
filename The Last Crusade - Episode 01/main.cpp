@@ -26,7 +26,7 @@ enum TileType{TYPE0, TYPE1, TYPE2, TYPE3, TYPE4, TYPE5, TYPE6, TYPE7, TYPE8, TYP
 
 
 /**
- * This class stores a standard integer vector2.
+ * This simple class stores a standard integer vector2.
  * Can be used as a key for maps.
  */
 class Vector2i
@@ -58,6 +58,7 @@ class Vector2i
 class Tile
 {
     public:
+        // ===================== Tile constructors ======================
         Tile() : m_position(), m_type(TileType::TYPE0), m_paths(), m_neighborhood()
         {
             initNeighborhood();
@@ -78,19 +79,44 @@ class Tile
             initNeighborhood();
         }
 
-        ~Tile() = default;
         Tile(const Tile &tile) = default;
+        // ================================================================
 
+        /** 
+            Tile destructor. Nothing special, neighborhood will be destrcuted with map.
+        */
+        virtual ~Tile() = default;
+
+        /**
+            Sets the postion of the tile on the map.
+
+            @param[in] x Row position on the map.
+            @param[in] y Column position on the map.
+        **/
         void setPosition(int x, int y)
         {
             m_position = Vector2i(x,y);
         }
 
+        /**
+            Sets the postion of the tile on the map.
+
+            @param[in] position New position on the map.
+        **/
         void setPosition(const Vector2i &position)
         {
             m_position = position;
         }
 
+        /**
+            Sets all surrounding tiles for the current one.
+            Pointers can be nullptr.
+
+            @param[in] top_tile Tile at (x,y-1).
+            @param[in] right_tile Tile at (x+1,y).
+            @param[in] bottom_tile Tile at (x,y+1).
+            @param[in] left_tile Tile at (x-1,y).
+        **/
         void setNeighborhood(Tile* top_tile, Tile* right_tile, Tile* bottom_tile, Tile *left_tile)
         {
             m_neighborhood[Direction::TOP] = top_tile;
@@ -99,47 +125,83 @@ class Tile
             m_neighborhood[Direction::LEFT] = left_tile;
         }
 
+        /**
+            Sets tile at the top.
+
+            @param[in] top_tile New tile at the top (can be nullptr).
+        **/
         void setTileTop(Tile* top_tile)
         {
             m_neighborhood[Direction::TOP] = top_tile;
         }
 
+
+        /**
+            Sets tile at the right.
+
+            @param[in] right_tile New tile at the right (can be nullptr).
+        **/
         void setTileRight(Tile* right_tile)
         {
             m_neighborhood[Direction::RIGHT] = right_tile;
         }
 
+
+        /**
+            Sets tile at the bottom.
+
+            @param[in] bottom_tile New tile at the bottom (can be nullptr).
+        **/
         void setTileBottom(Tile* bottom_tile)
         {
             m_neighborhood[Direction::BOTTOM] = bottom_tile;
         }
 
+
+        /**
+            Sets tile at the left.
+
+            @param[in] left_tile New tile at the left (can be nullptr).
+        **/
         void setTileLeft(Tile* left_tile)
         {
             m_neighborhood[Direction::LEFT] = left_tile;
         }
 
+
+        /**
+            Adds a path to the current tile for the player.
+
+            @param[in] input Input of the path.
+            @param[in] output Output of the path.
+        **/
         void addPath(const Direction input, const Direction output)
         {
             m_paths[input] = output;
         }
 
+        /**
+            @returns Current position of the tile.
+        */
         Vector2i getPosition() const
         {
             return m_position;
         }
 
+        /**
+            @returns Type of the current tile.
+        */
         TileType getType() const
         {
             return this->m_type;
         }
 
         /**
-         * Gives the output Tile for an input on the current Tile.
+         * Gives the output tile for an input on the current tile.
          *
-         * @param Direction input The direction from which the character enters the Tile.
+         * @param[in] input The direction from which the character enters the tile.
          *
-         * @return Tile* The next Tile the character will enter.
+         * @returns The next tile the character will enter.
          */
         Tile* getOutputTile(Direction input)
         {
@@ -154,6 +216,10 @@ class Tile
         }
 
     private:
+
+        /**
+            Inits tile neighbourhood to nullptr.
+        **/
         void initNeighborhood()
         {
             m_neighborhood[Direction::TOP] = nullptr;
@@ -165,7 +231,7 @@ class Tile
         Vector2i m_position;
         TileType m_type;
         map<Direction,Direction> m_paths; // Keys : input, Values : Output
-        map<Direction, Tile*> m_neighborhood;
+        map<Direction, Tile*> m_neighborhood; // Tiles around.
 };
 
 /**
@@ -179,9 +245,9 @@ class TileFactory
          * The output tile will need further settings to be usable like its position in the map (default 0,0) and its 
          * neighborhood (these settings must be set by the Map object).
          * 
-         * @param Tiletype type Type of the new tile. 
+         * @param[in] type Type of the new tile. 
          * 
-         * @return Tile the new tile.
+         * @returns The new tile.
          */
         static Tile createTile(TileType type)
         {
@@ -238,8 +304,10 @@ class TileFactory
                     tile.addPath(Direction::LEFT, Direction::BOTTOM);
                     break;
                 default: // TYPE0 and unknown => no path
-                    return tile;
+                    break;
             }
+
+            return tile;
         }
 };
 
@@ -249,15 +317,22 @@ class TileFactory
 class Map
 {
     public:
+        /**
+            Map constructor.
+        **/
         Map() : m_size(0,0), m_mapping() {}
-        ~Map() = default;
+
+        /**
+            Map destructor. Nothing special because tiles will auto destruct there (they are not pointers).
+        **/
+        virtual ~Map() = default;
 
         /**
          * Adds a Tile to the map
          *
-         * @param int x Position in the tiles line.
-         * @param int y Position in the tiles column.
-         * @param TileType tile_type Type of the Tile.
+         * @param[in] x Position in the tiles line.
+         * @param[in] y Position in the tiles column.
+         * @param[in] tile_type Type of the Tile.
          */
         void addTile(int x, int y, TileType tile_type)
         {
@@ -275,11 +350,11 @@ class Map
         /**
          * Returns next player position for a player falling through the map.
          *
-         * @param int x Current player position on tiles line.
-         * @param int y Current player position on tiles column.
-         * @param Direction input Direction by which the player is coming in the current tile.
+         * @param[in] x Current player position on tiles line.
+         * @param[in] y Current player position on tiles column.
+         * @param[in] input Direction by which the player is coming in the current tile.
          *
-         * @return Vector2i Position of the next tile the player will ends up in.
+         * @returns Position of the next tile the player will ends up in.
          */
         Vector2i getNextPlayerPosition(int x, int y, Direction input)
         {
@@ -302,7 +377,7 @@ class Map
          * Updates the neighborhood of a new tile and all the tiles touching it currently, so that the grid remains 
          * consistent in the mapping.
          *
-         * @param Tile* The new tile that has just been added to the Map.
+         * @param[inout] tile The new tile that has just been added to the Map, and needs neighborhood update.
          */
         void updateTileNeighborhood(Tile *tile)
         {
